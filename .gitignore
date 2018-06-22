@@ -2,6 +2,7 @@ node_modules/
 .idea/
 yarn.lock
 releases/
+test/releases/
 test/dist/
 .DS_Store
 yarn-error.log

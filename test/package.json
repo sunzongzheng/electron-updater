@@ -1,4 +1,22 @@
 {
+  "name": "electron-updater",
   "version": "0.0.9",
-  "main": "dist/main.js"
+  "main": "dist/main.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sunzongzheng/electron-updater.git"
+  },
+  "build": {
+    "appId": "com.github.sunzongzheng.electronupdaterexample",
+    "directories": {
+      "output": "releases"
+    },
+    "mac": {
+      "category": "your.app.category.type",
+      "target": [
+        "zip",
+        "dmg"
+      ]
+    }
+  }
 }

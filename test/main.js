@@ -1,4 +1,4 @@
-import autoUpdater from '../src/app'
+import autoUpdater from '../dist/app'
 import {app, BrowserWindow} from 'electron'
 
 let mainWindow
