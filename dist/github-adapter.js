@@ -39,6 +39,10 @@ class _default extends _baseAdapter.default {
           break;
       }
 
+      if (!url) {
+        reeject('There is not a available release downloadUrl');
+      }
+
       _https.default.get(url, res => {
         resolve(res.headers.location);
       }).on('error', err => {

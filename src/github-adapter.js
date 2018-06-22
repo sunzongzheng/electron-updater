@@ -23,6 +23,9 @@ export default class extends baseAdapter {
                     url = this.latestRelease.linux
                     break
             }
+            if (!url) {
+                reeject('There is not a available release downloadUrl')
+            }
             https.get(url, (res) => {
                 resolve(res.headers.location)
             }).on('error', (err) => {

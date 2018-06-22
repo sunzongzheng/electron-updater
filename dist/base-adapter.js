@@ -165,15 +165,23 @@ class _default {
   }
 
   async download() {
+    const file = _fs.default.createWriteStream(this.updatePath);
+
+    let downloadUrl;
+
     try {
-      const file = _fs.default.createWriteStream(this.updatePath);
+      downloadUrl = await this.getDownloadUrl();
+    } catch (e) {
+      this.emit('error', e);
+      console.error(e);
+      return _electron.dialog.showMessageBox({
+        type: 'info',
+        title: '下载提醒',
+        message: '下载失败，无法获取当前平台程序的下载地址'
+      });
+    }
 
-      const downloadUrl = await this.getDownloadUrl();
-
-      if (!downloadUrl) {
-        throw new Error('There is not a available release downloadUrl');
-      }
-
+    try {
       _https.default.get(downloadUrl, res => {
         const len = res.headers['content-length'];
         let downloaded = 0;
