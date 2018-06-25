@@ -99,11 +99,12 @@ class _default extends _baseAdapter.default {
                 break;
             }
           });
+          const version = versionInfo.tag_name;
           this.emit('log', this.latestRelease);
 
-          if (versionInfo.tag_name) {
-            this.updatePath = _path.default.join(_os.default.tmpdir(), `${_electron.app.getName()}_v${versionInfo.tag_name}_${+new Date()}.zip`);
-            resolve(this.parseVersionNum(versionInfo.tag_name.substring(1)));
+          if (version) {
+            this.latestVersion = version;
+            resolve(this.parseVersionNum(version.substring(1)));
           } else {
             reject('Cannot get latest version, please check the feed url.');
           }

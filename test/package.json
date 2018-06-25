@@ -17,6 +17,9 @@
         "zip",
         "dmg"
       ]
+    },
+    "linux": {
+      "target": "AppImage"
     }
   }
 }

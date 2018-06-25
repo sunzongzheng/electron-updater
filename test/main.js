@@ -4,14 +4,14 @@ import {app, BrowserWindow} from 'electron'
 let mainWindow
 
 /* test github */
-const update = autoUpdater({
-    type: 'github',
-    options: {
-        username: 'sunzongzheng',
-        repo: 'electron-updater',
-        log: true
-    }
-})
+// const update = autoUpdater({
+//     type: 'github',
+//     options: {
+//         username: 'sunzongzheng',
+//         repo: 'electron-updater',
+//         log: true
+//     }
+// })
 
 /* test custom with url */
 // const update = autoUpdater({
@@ -23,21 +23,22 @@ const update = autoUpdater({
 // })
 
 /* test custom with getRemoteLatest */
-// const update = autoUpdater({
-//     type: 'custom',
-//     options: {
-//         getRemoteLatest() {
-//             return new Promise((resolve) => {
-//                 this.latestRelease.linux = ''
-//                 this.latestRelease.osx = 'https://store.zzsun.cc/electron-updater-1.0.0-mac.zip'
-//                 this.latestRelease.windows = 'https://store.zzsun.cc/electron-updater.Setup.1.0.0.exe'
-//                 this.emit('log', this.latestRelease)
-//                 resolve(100000000)
-//             })
-//         },
-//         log: true
-//     }
-// })
+const update = autoUpdater({
+    type: 'custom',
+    options: {
+        getRemoteLatest() {
+            return new Promise((resolve) => {
+                this.latestRelease.linux = 'https://store.zzsun.cc/electron-updater-1.0.0-x86_64.AppImage'
+                this.latestRelease.osx = 'https://store.zzsun.cc/electron-updater-1.0.0-mac.zip'
+                this.latestRelease.windows = 'https://store.zzsun.cc/electron-updater.Setup.1.0.0.exe'
+                this.latestVersion = 'v1.0.0'
+                this.emit('log', this.latestRelease)
+                resolve(100000000)
+            })
+        },
+        log: true
+    }
+})
 
 function createWindow() {
     mainWindow = new BrowserWindow({width: 800, height: 600})

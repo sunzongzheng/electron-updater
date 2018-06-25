@@ -1,13 +1,18 @@
-# electron-updater
+# Electron-updater
 
-## feature
+## Feature
 - same api like [electron-userland/electron-builder](https://github.com/electron-userland/electron-builder/tree/master/packages/electron-updater)
 - do not need code siging for mac
-- surpport github release and custom server now
-- linux is not supported now
+- platform
+  - Mac (zip)
+  - Windows (exe)
+  - Linux (AppImage)
+- methods
+  - github release
+  - custom
 - node >= 8
 
-## usage
+## Usage
 ````js
 import autoUpdater from '@suen/electron-updater'
 
@@ -37,6 +42,7 @@ const update = autoUpdater({
                 this.latestRelease.linux = 'linux download url'
                 this.latestRelease.osx = 'osx download url'
                 this.latestRelease.windows = 'windows download url'
+                this.latestVersion = 'v1.0.0' // it decides your downloaded file name, will be helpful on linux
                 this.emit('log', this.latestRelease)
                 resolve(100000000) // your version num, must be an number
             })
@@ -49,7 +55,7 @@ const update = autoUpdater({
 update.checkForUpdatesAndNotify()
 ````
 
-## event
+## Event
 - checking-for-update
 - update-available
 - update-not-available

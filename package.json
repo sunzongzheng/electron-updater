@@ -1,6 +1,6 @@
 {
   "name": "@suen/electron-updater",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "main": "dist/app.js",
   "license": "MIT",
   "scripts": {
@@ -25,7 +25,7 @@
     "babel-loader": "^8.0.0-beta",
     "copy-webpack-plugin": "^4.5.1",
     "electron": "^2.0.2",
-    "electron-builder": "^20.15.1",
+    "electron-builder": "20.14.7",
     "eslint": "^4.19.1",
     "nodemon": "^1.17.5",
     "webpack": "^4.12.0"

@@ -7,6 +7,8 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.default = void 0;
 
+var _objectSpread2 = _interopRequireDefault(require("@babel/runtime/helpers/objectSpread"));
+
 var _promise = _interopRequireDefault(require("@babel/runtime/core-js/promise"));
 
 var _defineProperty2 = _interopRequireDefault(require("@babel/runtime/helpers/defineProperty"));
@@ -33,8 +35,8 @@ class _default {
       linux: '',
       windows: ''
     });
-    (0, _defineProperty2.default)(this, "feedUrl", '');
     (0, _defineProperty2.default)(this, "latestVersion", '');
+    (0, _defineProperty2.default)(this, "feedUrl", '');
     const {
       log = false,
       updateAvailableCallback = this.updateAvailableCallback,
@@ -52,8 +54,6 @@ class _default {
   }
 
   async checkForUpdatesAndNotify() {
-    // 暂不支持linux
-    if (process.platform !== 'darwin' && process.platform !== 'win32') return;
     this.emit('checking-for-update');
 
     try {
@@ -72,7 +72,6 @@ class _default {
     try {
       const latestVersion = await this.getRemoteLatest();
       const localVersion = this.parseVersionNum(_electron.app.getVersion());
-      this.updatePath = _path.default.join(_os.default.tmpdir(), `${_electron.app.getName()}_v${latestVersion}_${+new Date()}.zip`);
       this.emit('log', {
         latestVersion,
         localVersion
@@ -114,6 +113,7 @@ class _default {
           } = JSON.parse(data);
 
           if (version) {
+            this.latestVersion = version;
             this.latestRelease.linux = linux;
             this.latestRelease.osx = osx;
             this.latestRelease.windows = windows;
@@ -160,6 +160,11 @@ class _default {
   }
 
   async download() {
+    this.updatePath = _path.default.join(_os.default.tmpdir(), `${_electron.app.getName()}_${this.latestVersion}.` + ({
+      osx: 'zip',
+      windows: 'exe'
+    }[process.platform] || 'AppImage'));
+
     const file = _fs.default.createWriteStream(this.updatePath);
 
     let downloadUrl;
@@ -262,6 +267,38 @@ class _default {
         break;
 
       default:
+        _fs.default.chmodSync(this.updatePath, 0o755);
+
+        const appImageFile = process.env.APPIMAGE;
+
+        if (appImageFile == null) {
+          this.emit('error', "APPIMAGE env is not defined", "ERR_UPDATER_OLD_FILE_NOT_FOUND");
+        } // https://stackoverflow.com/a/1712051/1910191
+
+
+        _fs.default.unlinkSync(appImageFile);
+
+        let destination;
+
+        if (_path.default.basename(this.updatePath) === _path.default.basename(appImageFile)) {
+          // no version in the file name, overwrite existing
+          destination = appImageFile;
+        } else {
+          destination = _path.default.join(_path.default.dirname(appImageFile), _path.default.basename(this.updatePath));
+        }
+
+        (0, _child_process.execSync)(`mv -f ${this.updatePath} ${destination}`);
+        const env = (0, _objectSpread2.default)({}, process.env, {
+          APPIMAGE_SILENT_INSTALL: "true"
+        });
+        (0, _child_process.spawn)(destination, [], {
+          detached: true,
+          stdio: "ignore",
+          env
+        }).unref();
+
+        _electron.app.exit(0);
+
         break;
     }
   }

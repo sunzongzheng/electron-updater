@@ -3,7 +3,7 @@ import {URL} from 'url'
 import fs from 'fs'
 import path from 'path'
 import {app, dialog} from 'electron'
-import {exec, spawn} from 'child_process'
+import {exec, spawn, execSync} from 'child_process'
 import os from 'os'
 
 export default class {
@@ -13,6 +13,7 @@ export default class {
         linux: '',
         windows: ''
     }
+    latestVersion = ''
     feedUrl = ''
 
     constructor(options) {
@@ -33,8 +34,6 @@ export default class {
     }
 
     async checkForUpdatesAndNotify() {
-        // 暂不支持linux
-        if (process.platform !== 'darwin' && process.platform !== 'win32') return
         this.emit('checking-for-update')
         try {
             if (await this.checkUpdate()) {
@@ -52,7 +51,6 @@ export default class {
         try {
             const latestVersion = await this.getRemoteLatest()
             const localVersion = this.parseVersionNum(app.getVersion())
-            this.updatePath = path.join(os.tmpdir(), `${app.getName()}_v${latestVersion}_${+new Date()}.zip`)
             this.emit('log', {latestVersion, localVersion})
             return latestVersion > localVersion
         } catch (e) {
@@ -83,6 +81,7 @@ export default class {
                 res.on('end', () => {
                     const {version, linux, osx, windows} = JSON.parse(data)
                     if (version) {
+                        this.latestVersion = version
                         this.latestRelease.linux = linux
                         this.latestRelease.osx = osx
                         this.latestRelease.windows = windows
@@ -127,6 +126,13 @@ export default class {
     }
 
     async download() {
+        this.updatePath = path.join(
+            os.tmpdir(),
+            `${app.getName()}_${this.latestVersion}.` + ({
+                osx: 'zip',
+                windows: 'exe'
+            }[process.platform] || 'AppImage')
+        )
         const file = fs.createWriteStream(this.updatePath)
         let downloadUrl
         try {
@@ -221,6 +227,38 @@ export default class {
                 app.exit(0)
                 break
             default:
+                fs.chmodSync(this.updatePath, 0o755)
+                const appImageFile = process.env.APPIMAGE
+                if (appImageFile == null) {
+                    this.emit('error', "APPIMAGE env is not defined", "ERR_UPDATER_OLD_FILE_NOT_FOUND")
+                }
+
+                // https://stackoverflow.com/a/1712051/1910191
+                fs.unlinkSync(appImageFile)
+
+                let destination
+                if (path.basename(this.updatePath) === path.basename(appImageFile)) {
+                    // no version in the file name, overwrite existing
+                    destination = appImageFile
+                }
+                else {
+                    destination = path.join(path.dirname(appImageFile), path.basename(this.updatePath))
+                }
+
+                execSync(`mv -f ${this.updatePath} ${destination}`)
+
+                const env = {
+                    ...process.env,
+                    APPIMAGE_SILENT_INSTALL: "true",
+                }
+
+                spawn(destination, [], {
+                    detached: true,
+                    stdio: "ignore",
+                    env,
+                })
+                    .unref()
+                app.exit(0)
                 break
         }
     }
