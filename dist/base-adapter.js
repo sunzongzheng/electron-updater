@@ -34,14 +34,17 @@ class _default {
       windows: ''
     });
     (0, _defineProperty2.default)(this, "feedUrl", '');
+    (0, _defineProperty2.default)(this, "latestVersion", '');
     const {
       log = false,
       updateAvailableCallback = this.updateAvailableCallback,
-      downloadFinishedCallback = this.downloadFinishedCallback
+      downloadFinishedCallback = this.downloadFinishedCallback,
+      getRemoteLatest = this.getRemoteLatest
     } = options;
     this.log = log;
     this.updateAvailableCallback = updateAvailableCallback;
     this.downloadFinishedCallback = downloadFinishedCallback;
+    this.getRemoteLatest = getRemoteLatest;
   }
 
   setFeedUrl(url) {
@@ -69,6 +72,7 @@ class _default {
     try {
       const latestVersion = await this.getRemoteLatest();
       const localVersion = this.parseVersionNum(_electron.app.getVersion());
+      this.updatePath = _path.default.join(_os.default.tmpdir(), `${_electron.app.getName()}_v${latestVersion}_${+new Date()}.zip`);
       this.emit('log', {
         latestVersion,
         localVersion
@@ -102,28 +106,19 @@ class _default {
           data += chunk;
         });
         res.on('end', () => {
-          const versionInfo = JSON.parse(data);
-          versionInfo.assets.forEach(item => {
-            switch (item.content_type) {
-              case 'application/x-debian-package':
-                this.latestRelease.linux = item.browser_download_url;
-                break;
+          const {
+            version,
+            linux,
+            osx,
+            windows
+          } = JSON.parse(data);
 
-              case 'application/zip':
-                this.latestRelease.osx = item.browser_download_url;
-                break;
-
-              case 'application/x-msdos-program':
-              case 'application/x-msdownload':
-                this.latestRelease.windows = item.browser_download_url;
-                break;
-            }
-          });
-          this.emit('log', this.latestRelease);
-
-          if (versionInfo.tag_name) {
-            this.updatePath = _path.default.join(_os.default.tmpdir(), `${_electron.app.getName()}_v${versionInfo.tag_name}_${+new Date()}.zip`);
-            resolve(this.parseVersionNum(versionInfo.tag_name.substring(1)));
+          if (version) {
+            this.latestRelease.linux = linux;
+            this.latestRelease.osx = osx;
+            this.latestRelease.windows = windows;
+            this.emit('log', this.latestRelease);
+            resolve(this.parseVersionNum(version));
           } else {
             reject('Cannot get latest version, please check the feed url.');
           }
@@ -182,7 +177,14 @@ class _default {
     }
 
     try {
-      _https.default.get(downloadUrl, res => {
+      const url = new _url.URL(downloadUrl);
+
+      _https.default.get({
+        hostname: url.hostname,
+        port: 443,
+        path: url.pathname,
+        rejectUnauthorized: false
+      }, res => {
         const len = res.headers['content-length'];
         let downloaded = 0;
         res.pipe(file);
@@ -192,10 +194,11 @@ class _default {
         });
         file.on('finish', () => {
           file.close();
-          this.emit('log', `donwload success ${this.updatePath}`);
+          this.emit('log', `download success ${this.updatePath}`);
           this.downloadFinishedCallback();
         });
       }).on('error', err => {
+        this.emit('error', err);
         return _promise.default.reject(err);
       });
     } catch (e) {

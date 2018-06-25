@@ -2,6 +2,8 @@ import autoUpdater from '../dist/app'
 import {app, BrowserWindow} from 'electron'
 
 let mainWindow
+
+/* test github */
 const update = autoUpdater({
     type: 'github',
     options: {
@@ -10,6 +12,32 @@ const update = autoUpdater({
         log: true
     }
 })
+
+/* test custom with url */
+// const update = autoUpdater({
+//     type: 'custom',
+//     options: {
+//         url: 'https://gist.githubusercontent.com/sunzongzheng/049eb84dbc3f0a63016bb36193a46df3/raw/',
+//         log: true
+//     }
+// })
+
+/* test custom with getRemoteLatest */
+// const update = autoUpdater({
+//     type: 'custom',
+//     options: {
+//         getRemoteLatest() {
+//             return new Promise((resolve) => {
+//                 this.latestRelease.linux = ''
+//                 this.latestRelease.osx = 'https://store.zzsun.cc/electron-updater-1.0.0-mac.zip'
+//                 this.latestRelease.windows = 'https://store.zzsun.cc/electron-updater.Setup.1.0.0.exe'
+//                 this.emit('log', this.latestRelease)
+//                 resolve(100000000)
+//             })
+//         },
+//         log: true
+//     }
+// })
 
 function createWindow() {
     mainWindow = new BrowserWindow({width: 800, height: 600})

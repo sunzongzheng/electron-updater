@@ -20,10 +20,12 @@ export default class {
             log = false,
             updateAvailableCallback = this.updateAvailableCallback,
             downloadFinishedCallback = this.downloadFinishedCallback,
+            getRemoteLatest = this.getRemoteLatest
         } = options
         this.log = log
         this.updateAvailableCallback = updateAvailableCallback
         this.downloadFinishedCallback = downloadFinishedCallback
+        this.getRemoteLatest = getRemoteLatest
     }
 
     setFeedUrl(url) {
@@ -50,6 +52,7 @@ export default class {
         try {
             const latestVersion = await this.getRemoteLatest()
             const localVersion = this.parseVersionNum(app.getVersion())
+            this.updatePath = path.join(os.tmpdir(), `${app.getName()}_v${latestVersion}_${+new Date()}.zip`)
             this.emit('log', {latestVersion, localVersion})
             return latestVersion > localVersion
         } catch (e) {
@@ -78,25 +81,13 @@ export default class {
                     data += chunk
                 })
                 res.on('end', () => {
-                    const versionInfo = JSON.parse(data)
-                    versionInfo.assets.forEach(item => {
-                        switch (item.content_type) {
-                            case 'application/x-debian-package':
-                                this.latestRelease.linux = item.browser_download_url
-                                break
-                            case 'application/zip':
-                                this.latestRelease.osx = item.browser_download_url
-                                break
-                            case 'application/x-msdos-program':
-                            case 'application/x-msdownload':
-                                this.latestRelease.windows = item.browser_download_url
-                                break
-                        }
-                    })
-                    this.emit('log', this.latestRelease)
-                    if (versionInfo.tag_name) {
-                        this.updatePath = path.join(os.tmpdir(), `${app.getName()}_v${versionInfo.tag_name}_${+new Date()}.zip`)
-                        resolve(this.parseVersionNum(versionInfo.tag_name.substring(1)))
+                    const {version, linux, osx, windows} = JSON.parse(data)
+                    if (version) {
+                        this.latestRelease.linux = linux
+                        this.latestRelease.osx = osx
+                        this.latestRelease.windows = windows
+                        this.emit('log', this.latestRelease)
+                        resolve(this.parseVersionNum(version))
                     } else {
                         reject('Cannot get latest version, please check the feed url.')
                     }
@@ -150,7 +141,13 @@ export default class {
             })
         }
         try {
-            https.get(downloadUrl, (res) => {
+            const url = new URL(downloadUrl)
+            https.get({
+                hostname: url.hostname,
+                port: 443,
+                path: url.pathname,
+                rejectUnauthorized: false
+            }, (res) => {
                 const len = res.headers['content-length']
                 let downloaded = 0
 
@@ -161,10 +158,11 @@ export default class {
                 })
                 file.on('finish', () => {
                     file.close()
-                    this.emit('log', `donwload success ${this.updatePath}`)
+                    this.emit('log', `download success ${this.updatePath}`)
                     this.downloadFinishedCallback()
                 })
             }).on('error', (err) => {
+                this.emit('error', err)
                 return Promise.reject(err)
             })
         } catch (e) {
