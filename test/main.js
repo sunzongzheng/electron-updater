@@ -1,7 +1,8 @@
 import autoUpdater from '../dist/app'
-import {app, BrowserWindow} from 'electron'
+import {app, BrowserWindow, Menu, Tray} from 'electron'
+import path from 'path'
 
-let mainWindow
+let mainWindow, appTray
 
 /* test github */
 // const update = autoUpdater({
@@ -48,6 +49,24 @@ function createWindow() {
         mainWindow = null
     })
 
+    appTray = new Tray(path.join(__dirname, 'images/yosoro-icon-32.png'))
+
+    const contextMenu = Menu.buildFromTemplate([
+        {
+            label: '显示主界面',
+            click() {
+                mainWindow.show()
+            }
+        },
+        {
+            label: '退出',
+            click() {
+                app.quit()
+            }
+        }
+    ])
+    appTray.setContextMenu(contextMenu)
+
     setTimeout(() => {
         update.on('checking-for-update', () => {
             mainWindow.webContents.send('checking-for-update')
@@ -68,7 +87,7 @@ function createWindow() {
             mainWindow.webContents.send('log', log)
         })
         update.checkForUpdatesAndNotify()
-    }, 1000)
+    }, 3000)
 }
 
 app.on('ready', createWindow)

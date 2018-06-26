@@ -14,6 +14,10 @@ module.exports = {
             {
                 from: path.resolve(__dirname, '../test/index.html'),
                 to: path.resolve(__dirname, '../test/dist/index.html')
+            },
+            {
+                from: path.resolve(__dirname, '../test/images'),
+                to: path.resolve(__dirname, '../test/dist/images')
             }
         ])
     ],

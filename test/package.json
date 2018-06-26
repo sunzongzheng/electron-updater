@@ -20,6 +20,9 @@
     },
     "linux": {
       "target": "AppImage"
+    },
+    "appImage": {
+      "systemIntegration": "doNotAsk"
     }
   }
 }

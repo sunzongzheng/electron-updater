@@ -247,17 +247,10 @@ export default class {
 
                 execSync(`mv -f ${this.updatePath} ${destination}`)
 
-                const env = {
-                    ...process.env,
-                    APPIMAGE_SILENT_INSTALL: "true",
-                }
-
-                spawn(destination, [], {
-                    detached: true,
-                    stdio: "ignore",
-                    env,
+                app.relaunch({
+                    args: process.argv.slice(1).concat(['--relaunch']),
+                    execPath: destination
                 })
-                    .unref()
                 app.exit(0)
                 break
         }

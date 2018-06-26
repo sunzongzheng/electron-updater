@@ -7,8 +7,6 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.default = void 0;
 
-var _objectSpread2 = _interopRequireDefault(require("@babel/runtime/helpers/objectSpread"));
-
 var _promise = _interopRequireDefault(require("@babel/runtime/core-js/promise"));
 
 var _defineProperty2 = _interopRequireDefault(require("@babel/runtime/helpers/defineProperty"));
@@ -288,14 +286,11 @@ class _default {
         }
 
         (0, _child_process.execSync)(`mv -f ${this.updatePath} ${destination}`);
-        const env = (0, _objectSpread2.default)({}, process.env, {
-          APPIMAGE_SILENT_INSTALL: "true"
+
+        _electron.app.relaunch({
+          args: process.argv.slice(1).concat(['--relaunch']),
+          execPath: destination
         });
-        (0, _child_process.spawn)(destination, [], {
-          detached: true,
-          stdio: "ignore",
-          env
-        }).unref();
 
         _electron.app.exit(0);
 
